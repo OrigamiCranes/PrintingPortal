@@ -27,6 +27,7 @@ def register():
     if form.validate_on_submit():
         user = models.User(username=form.username.data, email=form.email.data)
         user.set_password(form.password.data)
+        user.roles = [db.session.query(models.Role).get(2),]
         db.session.add(user)
         db.session.commit()
         flash('Congratulations, you are now a registered user!')
