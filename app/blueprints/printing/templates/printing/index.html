@@ -12,5 +12,62 @@
     <h1>Hello, welcome to the PRINTING</h1>
 </body>
 
+<form action="" method="post" novalidate>
+    <div class="printerAddQ">
+        <span>
+            {{ formAddQ.hidden_tag() }}
+            <a>
+                {{ formAddQ.printProduct.label }}
+                {{ formAddQ.printProduct(size=1) }}
+            </a>
+            <a>
+                {{ formAddQ.paperSize.label }}
+                {{ formAddQ.paperSize(width=22) }}
+            </a>
+            <a>
+                {{ formAddQ.paperType.label }}
+                {{ formAddQ.paperType(width=22) }}
+            </a>
+            <a>
+                {{ formAddQ.quantity.label }}
+                {{ formAddQ.quantity(size=1) }}
+            </a>
+
+            <a>{{ formAddQ.submit() }}</a>
+        </span>
+    </div>
+</form>
+
+<table>
+
+    <tr>
+        {% for column in printOrders_columns %}
+        <th>{{ column }}</th>
+        {% endfor %}
+    </tr>
+
+    {% for row in printOrders %}
+        <tr>
+            <td>{{ row.dateTime }}</td>
+            <td>{{ row.print_product.design}}</td>
+            <td>{{ row.paper_size.paperSize}}</td>
+            <td>{{ row.paper_type.paperType}}</td>
+            <td>{{ row.quantity}}</td>
+        </tr>
+    {% endfor %}
+</table>
+
+
+<form action="" method="post" novalidate>
+    <div class="printerBasket">
+        <span>
+            {{ formBasket.hidden_tag() }}
+            <a>{{ formBasket.clear() }}</a>
+            <a>{{ formBasket.checkout() }}</a>
+        </span>
+    </div>
+
+</form>
+
 {% endblock %}
 </html>
