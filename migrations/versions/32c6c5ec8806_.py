@@ -31,9 +31,9 @@ def upgrade():
     op.create_table('print_order',
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('dateTime', sa.DateTime(), nullable=True),
-    sa.Column('paperSize_id', sa.Integer(), nullable=True),
-    sa.Column('paperType_id', sa.Integer(), nullable=True),
-    sa.Column('printProduct_id', sa.Integer(), nullable=True),
+    sa.Column('paperSize', sa.Integer(), nullable=True),
+    sa.Column('paperType', sa.Integer(), nullable=True),
+    sa.Column('printProduct', sa.Integer(), nullable=True),
     sa.Column('quantity', sa.Integer(), nullable=True),
     sa.PrimaryKeyConstraint('id')
     )

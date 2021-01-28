@@ -23,6 +23,7 @@ def login():
 def register():
     if current_user.is_authenticated:
         return redirect(url_for('index'))
+
     form = forms.RegistrationForm()
     if form.validate_on_submit():
         user = models.User(username=form.username.data, email=form.email.data)
