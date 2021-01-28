@@ -46,3 +46,7 @@ class PrinterFormBasket(FlaskForm):
     clear = wtf.SubmitField()
     checkout = wtf.SubmitField()
 
+
+class PrinterOrderDelete(FlaskForm):
+    printOrder_id = wtf.HiddenField('printOrder_id')
+    x = wtf.SubmitField()

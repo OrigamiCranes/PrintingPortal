@@ -11,6 +11,7 @@ from app import db
 def index():
     formPAQ = forms.PrinterFormAddQuery()
     formBasket = forms.PrinterFormBasket()
+    formDelete = forms.PrinterOrderDelete()
 
     if formPAQ.validate_on_submit():
         print(formPAQ.quantity.data)
@@ -24,6 +25,11 @@ def index():
         db.session.add(order)
         db.session.commit()
 
+    if formDelete.validate_on_submit() and formDelete.x.data:
+        request_id = int(formDelete.printOrder_id.data)
+        db.session.query(models.PrintOrder).filter_by(id=request_id).delete()
+        db.session.commit()
+
     if formBasket.validate_on_submit():
         if formBasket.clear.data is True:
             db.session.query(models.PrintOrder).delete()
@@ -34,5 +40,6 @@ def index():
 
     printOrder_columns = ['DateTime', 'Print Design', 'Size', 'Paper Type', 'Quantity']
     return render_template('printing/index.html', title='Printing', formAddQ=formPAQ, formBasket=formBasket,
+                           formDelete=formDelete,
                            printOrders=db.session.query(models.PrintOrder).all(),
                            printOrders_columns=printOrder_columns)

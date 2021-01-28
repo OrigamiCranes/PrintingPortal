@@ -44,7 +44,10 @@
         {% for column in printOrders_columns %}
         <th>{{ column }}</th>
         {% endfor %}
+        <th>Delete</th>
     </tr>
+
+
 
     {% for row in printOrders %}
         <tr>
@@ -53,6 +56,15 @@
             <td>{{ row.paper_size.paperSize}}</td>
             <td>{{ row.paper_type.paperType}}</td>
             <td>{{ row.quantity}}</td>
+            <td>
+                <form action="" method="POST" novalidate>
+                    <div class="deleteButton">
+                    {{ formDelete.csrf_token() }}
+                    {{ formDelete.printOrder_id(value=row.id) }}
+                    {{ formDelete.x() }}
+                    </div>
+                </form>
+            </td>
         </tr>
     {% endfor %}
 </table>
