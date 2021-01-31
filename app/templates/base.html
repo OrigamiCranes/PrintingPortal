@@ -9,9 +9,14 @@
     <div class="whiteTitleBar">
         <span class="navigation">
             <a class="navigation" href= "{{ url_for('index') }}" > Home</a>
-            <span class="navigationSpace"/>
             <a class="navigation" href= "{{ url_for('printing.index') }}" > Printing</a>
-            <span class="navigationSpace"/>
+            {% if current_user.is_anonymous %}
+            <a class="navigation" href= "{{ url_for('auth.login') }}" > Login</a>
+            {% else %}
+            <a>{{ current_user.username}}</a>
+            <a class="navigation" href= "{{ url_for('auth.logout') }}" > Logout</a>
+            {% endif %}
+
         </span>
     </div>
     <hr>
