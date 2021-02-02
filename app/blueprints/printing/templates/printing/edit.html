@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+{% extends "base.html" %}
+
+
+{% block content %}
+
+<head>
+    <title>{{ title }} - HyenaHub</title>
+</head>
+<body>
+    <h1>Hello, welcome to the PRINTING</h1>
+</body>
+
+<table>
+
+    <tr>
+        {% for column in printOrders_columns %}
+        <th>{{ column }}</th>
+        {% endfor %}
+        <th>Delete</th>
+    </tr>
+
+
+
+    {% for row in printOrders %}
+
+        <tr>
+        {% if row.id == edit_row %}
+            <td>{{ row.dateTime }}</td>
+            <div class="formPEQ">
+                <form action="" method="POST" novalidate>
+                    {{ formPEQ.hidden_tag() }}
+                    <td>{{ formPEQ.printProduct }}</td>
+                    <td>{{ formPEQ.paperSize }}</td>
+                    <td>{{ formPEQ.paperType }}</td>
+                    <td>{{ formPEQ.quantity }}</td>
+                    <td>{{ formPEQ.submit }}
+                        {{ formPEQ.cancel }}</td>
+                </form>
+            </div>
+
+
+
+        {% else %}
+            <td>{{ row.dateTime }}</td>
+            <td>{{ row.print_product.design}}</td>
+            <td>{{ row.paper_size.paperSize}}</td>
+            <td>{{ row.paper_type.paperType}}</td>
+            <td>{{ row.quantity}}</td>
+            <td> </td>
+
+        {% endif %}
+        </tr>
+    {% endfor %}
+</table>
+
+
+{% endblock %}
+</html>

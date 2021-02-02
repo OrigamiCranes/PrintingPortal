@@ -1,11 +1,12 @@
 from . import bp, forms, models
-from flask import render_template, make_response, request, session
+from flask import render_template, make_response, request, session, redirect, url_for
 from flask_login import login_required
 # from flask_user roles_required
 import datetime
 import wtforms as wtf
 from app import db
 
+printOrder_columns = ['DateTime', 'Print Design', 'Size', 'Paper Type', 'Quantity']
 
 @bp.route('/printOrder', methods=['GET', 'POST'])
 @login_required
@@ -18,21 +19,26 @@ def index():
 
     # 2. POST Validate Forms
     if formPAQ.validate_on_submit():
-        print(formPAQ.quantity.data)
         dateTime = datetime.datetime.now()
-        order = models.PrintOrder(dateTime=dateTime)
-        order.paperSize = formPAQ.paperSize.data.id
-        order.paperType = formPAQ.paperType.data.id
-        order.printProduct = formPAQ.printProduct.data.id
-        order.quantity = formPAQ.quantity.data
-        print(order)
+        order = models.PrintOrder(
+            dateTime=dateTime,
+            paperSize=formPAQ.paperSize.data.id,
+            paperType=formPAQ.paperType.data.id,
+            printProduct=formPAQ.printProduct.data.id,
+            quantity=formPAQ.quantity.data)
         db.session.add(order)
         db.session.commit()
 
-    if formDelete.validate_on_submit() and formDelete.x.data:
-        request_id = int(formDelete.printOrder_id.data)
-        db.session.query(models.PrintOrder).filter_by(id=request_id).delete()
-        db.session.commit()
+    if formDelete.validate_on_submit():
+        if formDelete.delete.data:
+            request_id = int(formDelete.printOrder_id.data)
+            db.session.query(models.PrintOrder).filter_by(id=request_id).delete()
+            db.session.commit()
+
+        if formDelete.edit.data:
+            request_id = int(formDelete.printOrder_id.data)
+            return redirect(url_for('.edit', row_id=request_id))
+
 
     if formBasket.validate_on_submit():
         if formBasket.clear.data is True:
@@ -55,16 +61,43 @@ def index():
             db.session.query(models.PrintOrder).delete()
             db.session.commit()
 
-    printOrder_columns = ['DateTime', 'Print Design', 'Size', 'Paper Type', 'Quantity']
     return render_template('printing/index.html', title='Printing', formAddQ=formPAQ, formBasket=formBasket,
                            formDelete=formDelete,
                            printOrders=db.session.query(models.PrintOrder).all(),
                            printOrders_columns=printOrder_columns)
 
 
+@bp.route('/printOrder/edit/<int:row_id>', methods=['GET', 'POST'])
+@login_required
+def edit(row_id):
+
+    updateRow = db.session.query(models.PrintOrder).filter_by(id=row_id).one()
+
+    formPEQ = forms.printerFormEditQuery_factory(updateRow)()
+    formDelete = forms.PrinterOrderDelete()
+
+    if formPEQ.validate_on_submit() and formPEQ.submit.data:
+        updateRow.paperSize = formPEQ.paperSize.data.id
+        updateRow.paperType = formPEQ.paperType.data.id
+        updateRow.printProduct = formPEQ.printProduct.data.id
+        updateRow.quantity = formPEQ.quantity.data
+        db.session.commit()
+
+        return redirect(url_for('.index'))
+
+    elif formPEQ.cancel.data:
+        return redirect(url_for('.index'))
+
+    return render_template('printing/edit.html', title='Print Order Edit', formPEQ=formPEQ, formDelete=formDelete,
+                           printOrders=db.session.query(models.PrintOrder).all(),
+                           printOrders_columns=printOrder_columns,
+                           edit_row=row_id)
+
+
+
 @bp.route('/paper/settings')
 @login_required
-def edit():
+def settings():
     return render_template('printing/settings.html')
 
 
@@ -94,7 +127,6 @@ def orderHistory():
             models.PrintOrderHistory.quantity.like(filter_data[3])
         )
 
-    printOrder_columns = ['DateTime', 'Print Design', 'Size', 'Paper Type', 'Quantity']
     return render_template('printing/filter.html', title='Print Order History',
                            printOrders=printOrders,
                            printOrders_columns=printOrder_columns,

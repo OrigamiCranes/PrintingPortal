@@ -49,7 +49,8 @@ class PrinterFormBasket(FlaskForm):
 
 class PrinterOrderDelete(FlaskForm):
     printOrder_id = wtf.HiddenField('printOrder_id')
-    x = wtf.SubmitField()
+    delete = wtf.SubmitField()
+    edit = wtf.SubmitField()
 
 
 class PrinterFormFilter(FlaskForm):
@@ -76,4 +77,39 @@ class PrinterFormFilter(FlaskForm):
 
     quantity = wtf.IntegerField()
     submit = wtf.SubmitField()
+
+
+def printerFormEditQuery_factory(printOrder_row):
+    class PrinterFormEditQuery(FlaskForm):
+
+
+        printProduct = QuerySelectField(
+            'Print Product',
+            query_factory=lambda: models.PrintProduct.query,
+            get_label='design',
+            allow_blank=False,
+            default=models.PrintProduct.query.filter_by(id=printOrder_row.printProduct).one()
+        )
+
+        paperSize = QuerySelectField(
+            'Paper Size',
+            query_factory=lambda: models.PaperSize.query,
+            get_label='paperSize',
+            allow_blank=False,
+            default=models.PaperSize.query.filter_by(id=printOrder_row.paperSize).one()
+        )
+
+        paperType = QuerySelectField(
+            'Paper Type',
+            query_factory=lambda: models.PaperType.query,
+            get_label='paperType',
+            allow_blank=False,
+            default=models.PaperType.query.filter_by(id=printOrder_row.paperType).one()
+        )
+
+        quantity = wtf.IntegerField(default=1)
+        submit = wtf.SubmitField()
+        cancel = wtf.SubmitField()
+
+    return PrinterFormEditQuery
 

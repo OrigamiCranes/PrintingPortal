@@ -61,7 +61,8 @@
                     <div class="deleteButton">
                     {{ formDelete.csrf_token() }}
                     {{ formDelete.printOrder_id(value=row.id) }}
-                    {{ formDelete.x() }}
+                    {{ formDelete.delete() }}
+                    {{ formDelete.edit() }}
                     </div>
                 </form>
             </td>
