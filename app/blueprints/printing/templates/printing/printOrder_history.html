@@ -3,10 +3,9 @@
 
 {% block content %}
 
+<h1>{{title}}</h1>
 
-<h1>Print Order</h1>
-
-<h2>Add:</h2>
+<h2>Filter By:</h2>
 {% include 'printing/formAdd.html' %}
 
 <hr>
@@ -15,7 +14,4 @@
 
 <hr>
 
-{% include 'printing/formBasket.html' %}
-
 {% endblock %}
-

@@ -8,110 +8,157 @@ from app import db
 
 printOrder_columns = ['DateTime', 'Print Design', 'Size', 'Paper Type', 'Quantity']
 
+
+@bp.route('/printOrder/<int:row_id>', methods=['GET', 'POST'])
 @bp.route('/printOrder', methods=['GET', 'POST'])
 @login_required
-def index():
+def index(row_id=None):
 
     # 1. Declare Forms
-    formPAQ = forms.PrinterFormAddQuery()
+    formAdd = forms.formPrinterQuery_factory('Add')
     formBasket = forms.PrinterFormBasket()
-    formDelete = forms.PrinterOrderDelete()
+    formSettings = forms.PrinterOrderSettings()
+    formEdit = None
+
+    if row_id is not None:
+        formEdit = forms.formPrinterQuery_factory('Edit', row_id=row_id)
+
+        if formEdit is False:
+            return redirect(url_for('.index'))
+
+        if formEdit.validate_on_submit() and formEdit.submit.data:
+            return redirect(url_for('.edit', row_id=row_id,
+                                    paperSize=formEdit.paperSize.data.id,
+                                    paperType=formEdit.paperType.data.id,
+                                    printProduct=formEdit.printProduct.data.id,
+                                    quantity=formEdit.quantity.data), code=307)
+
+        elif formEdit.cancel.data:
+            return redirect(url_for('.index'))
 
     # 2. POST Validate Forms
-    if formPAQ.validate_on_submit():
-        dateTime = datetime.datetime.now()
-        order = models.PrintOrder(
-            dateTime=dateTime,
-            paperSize=formPAQ.paperSize.data.id,
-            paperType=formPAQ.paperType.data.id,
-            printProduct=formPAQ.printProduct.data.id,
-            quantity=formPAQ.quantity.data)
-        db.session.add(order)
-        db.session.commit()
+    if formAdd.validate_on_submit():
+        return redirect(url_for('.add', row_id=row_id,
+                                paperSize=formAdd.paperSize.data.id,
+                                paperType=formAdd.paperType.data.id,
+                                printProduct=formAdd.printProduct.data.id,
+                                quantity=formAdd.quantity.data), code=307)
 
-    if formDelete.validate_on_submit():
-        if formDelete.delete.data:
-            request_id = int(formDelete.printOrder_id.data)
-            db.session.query(models.PrintOrder).filter_by(id=request_id).delete()
-            db.session.commit()
+    if formSettings.validate_on_submit():
+        if formSettings.delete.data:
+            request_id = int(formSettings.printOrder_id.data)
+            return redirect(url_for('.delete', row_id=request_id))
 
-        if formDelete.edit.data:
-            request_id = int(formDelete.printOrder_id.data)
-            return redirect(url_for('.edit', row_id=request_id))
-
+        if formSettings.edit.data:
+            request_id = int(formSettings.printOrder_id.data)
+            formSettings.edit.data = False
+            return redirect(url_for('.index', row_id=request_id))
 
     if formBasket.validate_on_submit():
         if formBasket.clear.data is True:
-            db.session.query(models.PrintOrder).delete()
-            db.session.commit()
+            return redirect(url_for('.clear'), code=307)
 
         elif formBasket.checkout.data is True:
-            printOrders = db.session.query(models.PrintOrder).all()
+            return redirect(url_for('.checkout'), code=307)
 
-            for order in printOrders:
-                printHistory_row = models.PrintOrderHistory(
-                    dateTime=order.dateTime,
-                    paperSize=order.paperSize,
-                    paperType=order.paperType,
-                    printProduct=order.printProduct,
-                    quantity=order.quantity
-                )
-                db.session.add(printHistory_row)
-
-            db.session.query(models.PrintOrder).delete()
-            db.session.commit()
-
-    return render_template('printing/index.html', title='Printing', formAddQ=formPAQ, formBasket=formBasket,
-                           formDelete=formDelete,
-                           printOrders=db.session.query(models.PrintOrder).all(),
-                           printOrders_columns=printOrder_columns)
+    return render_template('printing/index.html', title='Printing', formAdd=formAdd, formBasket=formBasket,
+                           formRowSettings=formSettings, formRowEdit=formEdit, edit_id=row_id,
+                           table_data=db.session.query(models.PrintOrder).all(),
+                           table_headers=printOrder_columns, table_settings=True)
 
 
-@bp.route('/printOrder/edit/<int:row_id>', methods=['GET', 'POST'])
+@bp.route('/printOrder/add', methods=['POST'])
+@login_required
+def add():
+    paperSize = request.args.get('paperSize', None)
+    paperType = request.args.get('paperType', None)
+    printProduct = request.args.get('printProduct', None)
+    quantity = request.args.get('quantity', None)
+
+    # TODO: Add Input Error Checking for Security & Database Integrity
+
+    dateTime = datetime.datetime.now()
+    dateTime = dateTime.replace(microsecond=0)
+
+    order = models.PrintOrder(
+        dateTime=dateTime,
+        paperSize=paperSize,
+        paperType=paperType,
+        printProduct=printProduct,
+        quantity=quantity)
+
+    db.session.add(order)
+    db.session.commit()
+    return redirect(url_for('.index'))
+
+
+@bp.route('/printOrder/<int:row_id>/delete', methods=['POST'])
+@login_required
+def delete(row_id):
+    db.session.query(models.PrintOrder).filter_by(id=row_id).delete()
+    db.session.commit()
+    return redirect(url_for('.index'))
+
+
+@bp.route('/printOrder/<int:row_id>/edit', methods=['POST'])
 @login_required
 def edit(row_id):
+    paperSize = request.args.get('paperSize', None)
+    paperType = request.args.get('paperType', None)
+    printProduct = request.args.get('printProduct', None)
+    quantity = request.args.get('quantity', None)
 
-    updateRow = db.session.query(models.PrintOrder).filter_by(id=row_id).one()
+    # TODO: Add Input Error Checking for Security & Database Integrity
 
-    formPEQ = forms.printerFormEditQuery_factory(updateRow)()
-    formDelete = forms.PrinterOrderDelete()
+    row_update = db.session.query(models.PrintOrder).filter_by(id=row_id).one()
+    row_update.paperSize = paperSize
+    row_update.paperType = paperType
+    row_update.printProduct = printProduct
+    row_update.quantity = quantity
 
-    if formPEQ.validate_on_submit() and formPEQ.submit.data:
-        updateRow.paperSize = formPEQ.paperSize.data.id
-        updateRow.paperType = formPEQ.paperType.data.id
-        updateRow.printProduct = formPEQ.printProduct.data.id
-        updateRow.quantity = formPEQ.quantity.data
-        db.session.commit()
-
-        return redirect(url_for('.index'))
-
-    elif formPEQ.cancel.data:
-        return redirect(url_for('.index'))
-
-    return render_template('printing/edit.html', title='Print Order Edit', formPEQ=formPEQ, formDelete=formDelete,
-                           printOrders=db.session.query(models.PrintOrder).all(),
-                           printOrders_columns=printOrder_columns,
-                           edit_row=row_id)
+    db.session.commit()
+    return redirect(url_for('.index'))
 
 
-
-@bp.route('/paper/settings')
+@bp.route('/printOrder/clear', methods=['POST'])
 @login_required
-def settings():
-    return render_template('printing/settings.html')
+def clear():
+    db.session.query(models.PrintOrder).delete()
+    db.session.commit()
+    return redirect(url_for('.index'))
+
+
+@bp.route('/printOrder/checkout', methods=['POST'])
+@login_required
+def checkout():
+    printOrders = db.session.query(models.PrintOrder).all()
+
+    for order in printOrders:
+        printHistory_row = models.PrintOrderHistory(
+            dateTime=order.dateTime,
+            paperSize=order.paperSize,
+            paperType=order.paperType,
+            printProduct=order.printProduct,
+            quantity=order.quantity)
+        db.session.add(printHistory_row)
+    db.session.query(models.PrintOrder).delete()
+    db.session.commit()
+    return redirect(url_for('.index'))
 
 
 @bp.route('/printOrder/history', methods=['GET', 'POST'])
 @login_required
 def orderHistory():
 
-    formFilter = forms.PrinterFormFilter()
+    formFilter = forms.formPrinterQuery_factory('Filter')
+    formSettings = forms.PrinterOrderSettings()
+    table_settings = False
+
     printOrders = db.session.query(models.PrintOrderHistory).all()
 
     if formFilter.submit.data:
         filter_data = []
         for field in formFilter:
-            print(field.type)
             if field.data is None:
                 filter_data.append('%')
             elif field.type is 'IntegerField':
@@ -119,7 +166,6 @@ def orderHistory():
             elif field.type is 'QuerySelectField':
                 filter_data.append(field.data.id)
 
-        print(filter_data)
         printOrders = db.session.query(models.PrintOrderHistory).filter(
             models.PrintOrderHistory.printProduct.like(filter_data[0]),
             models.PrintOrderHistory.paperSize.like(filter_data[1]),
@@ -127,10 +173,16 @@ def orderHistory():
             models.PrintOrderHistory.quantity.like(filter_data[3])
         )
 
-    return render_template('printing/filter.html', title='Print Order History',
-                           printOrders=printOrders,
-                           printOrders_columns=printOrder_columns,
-                           formFilter=formFilter)
+    return render_template('printing/printOrder_history.html', title='Print Order History',
+                           formAdd=formFilter, formRowSettings=formSettings,
+                           table_data=printOrders, table_headers=printOrder_columns,
+                           table_settings=table_settings)
+
+
+@bp.route('/paper/settings')
+@login_required
+def settings():
+    return render_template('printing/settings.html')
 
 
 @bp.route('/inventory/prints')

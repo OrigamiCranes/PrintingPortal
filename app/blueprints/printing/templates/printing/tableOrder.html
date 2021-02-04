@@ -1,0 +1,50 @@
+<div class="tableInventory">
+    <table>
+
+        <tr>
+            {% for column in table_headers %}
+            <th>{{column}}</th>
+            {% endfor %}
+        </tr>
+
+        {% for row in table_data %}
+        <tr>
+        {% if row.id == edit_id %}
+            <td>{{ row.dateTime }}</td>
+            <div class="formRowEdit">
+                <form action="" method="POST" novalidate>
+                    {{ formRowEdit.hidden_tag() }}
+                    <td>{{ formRowEdit.printProduct }}</td>
+                    <td>{{ formRowEdit.paperSize }}</td>
+                    <td>{{ formRowEdit.paperType }}</td>
+                    <td>{{ formRowEdit.quantity }}</td>
+                    <td>{{ formRowEdit.submit }}
+                        {{ formRowEdit.cancel }}</td>
+                </form>
+            </div>
+
+        {% else %}
+            <td>{{row.dateTime}}</td>
+            <td>{{row.print_product.design}}</td>
+            <td>{{row.paper_size.paperSize}}</td>
+            <td>{{row.paper_type.paperType}}</td>
+            <td>{{row.quantity}}</td>
+
+            {% if table_settings is true %}
+            <td>
+                <form action="" method="POST" novalidate>
+                    <div class="formRowSettings">
+                        {{ formRowSettings.csrf_token() }}
+                        {{ formRowSettings.printOrder_id(value=row.id) }}
+                        {{ formRowSettings.edit() }}
+                        {{ formRowSettings.delete() }}
+                    </div>
+                </form>
+            </td>
+            {% endif %}
+
+        {% endif %}
+        </tr>
+        {% endfor %}
+    </table>
+</div>

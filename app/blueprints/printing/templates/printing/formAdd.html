@@ -1,0 +1,18 @@
+<div class="formAdd">
+    <form action="" method="POST">
+
+        <table>
+        {% for field in formAdd %}
+            {% if field.type != 'SubmitField' and field.type != 'CSRFTokenField' %}
+            <th>{{ field.label }}</th>
+            {% endif %}
+        {% endfor %}
+        <tr></tr>
+        {% for field in formAdd %}
+            <td>{{ field }}</td>
+        {% endfor %}
+        </table>
+
+
+    </form>
+</div>

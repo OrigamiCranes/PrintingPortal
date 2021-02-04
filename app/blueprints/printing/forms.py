@@ -2,44 +2,65 @@ from flask_wtf import FlaskForm
 import wtforms as wtf
 from wtforms.ext.sqlalchemy.fields import QuerySelectField
 from . import models
+from app import db
 from wtforms.validators import DataRequired
 
 
-# Legacy Class - not used
-class PrinterFormAdd(FlaskForm):
-    printProduct = wtf.SelectField()
-    paperSize = wtf.SelectField()
-    paperType = wtf.SelectField()
-    quantity = wtf.IntegerField()
-    submit = wtf.SubmitField()
+def formPrinterQuery_factory(form_type, row_id=None):
+    allow_blank = False
+    default = [None, None, None, None]
+    if form_type is 'Add':
+        default[3] = 1
 
+    elif form_type is 'Filter':
+        allow_blank = True
 
-class PrinterFormAddQuery(FlaskForm):
-    printProduct = QuerySelectField(
-        'Print Product',
-        query_factory=lambda: models.PrintProduct.query,
-        get_label='design',
-        allow_blank=False
-    )
+    elif form_type is 'Edit':
+        row_update = db.session.query(models.PrintOrder).filter_by(id=row_id).first()
+        if row_update is None:
+            return False
 
-    paperSize = QuerySelectField(
-        'Paper Size',
-        query_factory=lambda: models.PaperSize.query,
-        get_label='paperSize',
-        allow_blank=False
-    )
+        default = [models.PrintProduct.query.filter_by(id=row_update.printProduct).one(),
+                   models.PaperSize.query.filter_by(id=row_update.paperSize).one(),
+                   models.PaperType.query.filter_by(id=row_update.paperType).one(),
+                   int(row_update.quantity)]
 
-    paperType = QuerySelectField(
-        'Paper Type',
-        query_factory=lambda: models.PaperType.query,
-        get_label='paperType',
-        allow_blank=False
-    )
+    else:
+        raise Exception('form_type: ' + str(form_type) + ' not found')
 
-    quantity = wtf.IntegerField(
-        default=1
-    )
-    submit = wtf.SubmitField()
+    class FormPrinterQuery(FlaskForm):
+        printProduct = QuerySelectField(
+            'Print Product',
+            query_factory=lambda: models.PrintProduct.query,
+            get_label='design',
+            allow_blank=allow_blank,
+            default=default[0])
+
+        paperSize = QuerySelectField(
+            'Paper Size',
+            query_factory=lambda: models.PaperSize.query,
+            get_label='paperSize',
+            allow_blank=allow_blank,
+            default=default[1])
+
+        paperType = QuerySelectField(
+            'Paper Type',
+            query_factory=lambda: models.PaperType.query,
+            get_label='paperType',
+            allow_blank=allow_blank,
+            default=default[2])
+
+        quantity = wtf.IntegerField(
+            default=default[3])
+
+        submit = wtf.SubmitField()
+
+        if form_type is 'Edit':
+            cancel = wtf.SubmitField()
+
+    form = FormPrinterQuery()
+    form.form_type = form_type
+    return form
 
 
 class PrinterFormBasket(FlaskForm):
@@ -47,69 +68,9 @@ class PrinterFormBasket(FlaskForm):
     checkout = wtf.SubmitField()
 
 
-class PrinterOrderDelete(FlaskForm):
+class PrinterOrderSettings(FlaskForm):
     printOrder_id = wtf.HiddenField('printOrder_id')
     delete = wtf.SubmitField()
     edit = wtf.SubmitField()
 
-
-class PrinterFormFilter(FlaskForm):
-    printProduct = QuerySelectField(
-        'Print Product',
-        query_factory=lambda: models.PrintProduct.query,
-        get_label='design',
-        allow_blank=True
-    )
-
-    paperSize = QuerySelectField(
-        'Paper Size',
-        query_factory=lambda: models.PaperSize.query,
-        get_label='paperSize',
-        allow_blank=True
-    )
-
-    paperType = QuerySelectField(
-        'Paper Type',
-        query_factory=lambda: models.PaperType.query,
-        get_label='paperType',
-        allow_blank=True
-    )
-
-    quantity = wtf.IntegerField()
-    submit = wtf.SubmitField()
-
-
-def printerFormEditQuery_factory(printOrder_row):
-    class PrinterFormEditQuery(FlaskForm):
-
-
-        printProduct = QuerySelectField(
-            'Print Product',
-            query_factory=lambda: models.PrintProduct.query,
-            get_label='design',
-            allow_blank=False,
-            default=models.PrintProduct.query.filter_by(id=printOrder_row.printProduct).one()
-        )
-
-        paperSize = QuerySelectField(
-            'Paper Size',
-            query_factory=lambda: models.PaperSize.query,
-            get_label='paperSize',
-            allow_blank=False,
-            default=models.PaperSize.query.filter_by(id=printOrder_row.paperSize).one()
-        )
-
-        paperType = QuerySelectField(
-            'Paper Type',
-            query_factory=lambda: models.PaperType.query,
-            get_label='paperType',
-            allow_blank=False,
-            default=models.PaperType.query.filter_by(id=printOrder_row.paperType).one()
-        )
-
-        quantity = wtf.IntegerField(default=1)
-        submit = wtf.SubmitField()
-        cancel = wtf.SubmitField()
-
-    return PrinterFormEditQuery
 
