@@ -1,5 +1,5 @@
-from app import db, app
-import app.blueprints.printing.models as printModels
-x = db.session.query(printModels.PrintOrder)
 
-print(x)
+list = [10,20,30,40,50]
+
+for n, item in enumerate(list):
+    print(str(n) + '=' +str(item))

@@ -34,7 +34,9 @@
             <td>
                 <form action="" method="POST" novalidate>
                     <div class="formRowSettings">
-                        {{ formRowSettings.csrf_token() }}
+                        {% if 'csrf_token' in form %}
+                            {{ formRowSettings.csrf_token() }}
+                        {% endif %}
                         {{ formRowSettings.printOrder_id(value=row.id) }}
                         {{ formRowSettings.edit() }}
                         {{ formRowSettings.delete() }}

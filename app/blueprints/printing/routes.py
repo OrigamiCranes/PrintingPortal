@@ -71,22 +71,31 @@ def index(row_id=None):
 @bp.route('/printOrder/add', methods=['POST'])
 @login_required
 def add():
-    paperSize = request.args.get('paperSize', None)
-    paperType = request.args.get('paperType', None)
-    printProduct = request.args.get('printProduct', None)
-    quantity = request.args.get('quantity', None)
+    # 1. Get Input Variables
+    inputs = [request.args.get('paperSize', None), request.args.get('paperType', None),
+              request.args.get('printProduct', None), request.args.get('quantity', None)]
 
-    # TODO: Add Input Error Checking for Security & Database Integrity
+    # 2. Error checking http based variables for safety
+    columns = ['models.PaperSize', 'models.PaperType', 'models.PrintProduct','quantity']
+    for n, item in enumerate(inputs):
+        print(n)
+        if item is None or isinstance(item, int):
+            return redirect(url_for('.index'), code=304)
+        if n is not 3:
+            if db.session.query(eval(columns[n])).filter_by(id=item).scalar() is None:
+                print('error' + str(n))
+                return redirect(url_for('.index'), code=304)
+
 
     dateTime = datetime.datetime.now()
     dateTime = dateTime.replace(microsecond=0)
 
     order = models.PrintOrder(
         dateTime=dateTime,
-        paperSize=paperSize,
-        paperType=paperType,
-        printProduct=printProduct,
-        quantity=quantity)
+        paperSize=inputs[0],
+        paperType=inputs[1],
+        printProduct=inputs[2],
+        quantity=inputs[3])
 
     db.session.add(order)
     db.session.commit()
@@ -104,18 +113,26 @@ def delete(row_id):
 @bp.route('/printOrder/<int:row_id>/edit', methods=['POST'])
 @login_required
 def edit(row_id):
-    paperSize = request.args.get('paperSize', None)
-    paperType = request.args.get('paperType', None)
-    printProduct = request.args.get('printProduct', None)
-    quantity = request.args.get('quantity', None)
+    # 1. Get Input Variables
+    inputs = [request.args.get('paperSize', None), request.args.get('paperType', None),
+              request.args.get('printProduct', None), request.args.get('quantity', None)]
 
-    # TODO: Add Input Error Checking for Security & Database Integrity
+    # 2. Error checking http based variables for safety
+    columns = ['models.PaperSize', 'models.PaperType', 'models.PrintProduct', 'quantity']
+    for n, item in enumerate(inputs):
+        print(n)
+        if item is None or isinstance(item, int):
+            return redirect(url_for('.index'), code=304)
+        if n is not 3:
+            if db.session.query(eval(columns[n])).filter_by(id=item).scalar() is None:
+                print('error' + str(n))
+                return redirect(url_for('.index'), code=304)
 
     row_update = db.session.query(models.PrintOrder).filter_by(id=row_id).one()
-    row_update.paperSize = paperSize
-    row_update.paperType = paperType
-    row_update.printProduct = printProduct
-    row_update.quantity = quantity
+    row_update.paperSize = inputs[0]
+    row_update.paperType = inputs[1]
+    row_update.printProduct = inputs[2]
+    row_update.quantity = inputs[3]
 
     db.session.commit()
     return redirect(url_for('.index'))
@@ -132,6 +149,8 @@ def clear():
 @bp.route('/printOrder/checkout', methods=['POST'])
 @login_required
 def checkout():
+    if bool(db.session.query(models.PrintOrder).first()) is False:
+        return redirect(url_for('.index'))
 
     # 1. Transfer from table printOrder to table printOrderHistory
     printOrders = db.session.query(models.PrintOrder).all()
@@ -200,7 +219,7 @@ def orderHistory():
                            table_settings=table_settings)
 
 
-@bp.route('/paper/settings')
+@bp.route('/paper/settings',  methods=['GET', 'POST'])
 @login_required
 def settings():
     return render_template('printing/settings.html')
