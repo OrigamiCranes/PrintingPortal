@@ -7,6 +7,7 @@ import wtforms as wtf
 from app import db
 
 printOrder_columns = ['DateTime', 'Print Design', 'Size', 'Paper Type', 'Quantity']
+printInventory_columns = ['Print Design', 'Size', 'Paper Type', 'Quantity']
 
 
 @bp.route('/printOrder/<int:row_id>', methods=['GET', 'POST'])
@@ -131,6 +132,8 @@ def clear():
 @bp.route('/printOrder/checkout', methods=['POST'])
 @login_required
 def checkout():
+
+    # 1. Transfer from table printOrder to table printOrderHistory
     printOrders = db.session.query(models.PrintOrder).all()
 
     for order in printOrders:
@@ -143,6 +146,25 @@ def checkout():
         db.session.add(printHistory_row)
     db.session.query(models.PrintOrder).delete()
     db.session.commit()
+
+    # 2. Make Inventory Query
+    inventory_new = db.engine.execute('SELECT printProduct, paperSize, paperType, COUNT(*) AS quantity FROM print_order_history GROUP BY paperSize, paperType, printProduct')
+
+    # 3. Delete Print Inventory and Pass inventory_new to a new table
+    db.session.query(models.PrintInventory).delete()
+    db.session.execute("ALTER TABLE print_inventory AUTO_INCREMENT = 1")
+    db.session.commit()
+
+    for item in inventory_new:
+        inventory_row = models.PrintInventory(
+            printProduct=db.session.query(models.PrintProduct).filter_by(id=item.printProduct).one().id,
+            paperSize=db.session.query(models.PaperSize).filter_by(id=item.paperSize).one().id,
+            paperType=db.session.query(models.PaperType).filter_by(id=item.paperType).one().id,
+            quantity=item.quantity)
+        db.session.add(inventory_row)
+
+    db.session.commit()
+
     return redirect(url_for('.index'))
 
 
@@ -151,10 +173,7 @@ def checkout():
 def orderHistory():
 
     formFilter = forms.formPrinterQuery_factory('Filter')
-    formSettings = forms.PrinterOrderSettings()
     table_settings = False
-
-    printOrders = db.session.query(models.PrintOrderHistory).all()
 
     if formFilter.submit.data:
         filter_data = []
@@ -172,9 +191,11 @@ def orderHistory():
             models.PrintOrderHistory.paperType.like(filter_data[2]),
             models.PrintOrderHistory.quantity.like(filter_data[3])
         )
+    else:
+        printOrders = db.session.query(models.PrintOrderHistory).all()
 
     return render_template('printing/printOrder_history.html', title='Print Order History',
-                           formAdd=formFilter, formRowSettings=formSettings,
+                           formAdd=formFilter,
                            table_data=printOrders, table_headers=printOrder_columns,
                            table_settings=table_settings)
 
@@ -185,6 +206,31 @@ def settings():
     return render_template('printing/settings.html')
 
 
-@bp.route('/inventory/prints')
+@bp.route('/inventory/prints', methods=['GET', 'POST'])
 def inventoryPrints():
-    pass
+    formFilter = forms.formPrinterQuery_factory('Filter')
+    table_settings = False
+
+    if formFilter.submit.data:
+        filter_data = []
+        for field in formFilter:
+            if field.data is None:
+                filter_data.append('%')
+            elif field.type is 'IntegerField':
+                filter_data.append(field.data)
+            elif field.type is 'QuerySelectField':
+                filter_data.append(field.data.id)
+
+        printInventory = db.session.query(models.PrintInventory).filter(
+            models.PrintInventory.printProduct.like(filter_data[0]),
+            models.PrintInventory.paperSize.like(filter_data[1]),
+            models.PrintInventory.paperType.like(filter_data[2]),
+            models.PrintInventory.quantity.like(filter_data[3])
+        )
+    else:
+        printInventory = db.session.query(models.PrintInventory).all()
+
+    return render_template('printing/printInventory.html', title='Print Inventory',
+                           formAdd=formFilter,
+                           table_data=printInventory, table_headers=printInventory_columns,
+                           table_settings=table_settings)

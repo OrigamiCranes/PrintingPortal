@@ -28,6 +28,7 @@ class PaperSize(db.Model):
 
     printOrders = db.relationship('PrintOrder', backref='paper_size')
     printOrdersHistory = db.relationship('PrintOrderHistory', backref='paper_size')
+    printInventory = db.relationship('PrintInventory', backref='paper_size')
 
 
 class PaperType(db.Model):
@@ -37,7 +38,7 @@ class PaperType(db.Model):
 
     printOrders = db.relationship('PrintOrder', backref='paper_type')
     printOrdersHistory = db.relationship('PrintOrderHistory', backref='paper_type')
-
+    printInventory = db.relationship('PrintInventory', backref='paper_type')
 
 class PrintProduct(db.Model):
     __tablename__ = 'print_product'
@@ -46,6 +47,17 @@ class PrintProduct(db.Model):
 
     printOrders = db.relationship('PrintOrder', backref='print_product')
     printOrdersHistory = db.relationship('PrintOrderHistory', backref='print_product')
+    printInventory = db.relationship('PrintInventory', backref='print_product')
+
+
+class PrintInventory(db.Model):
+    __tablename__ = "print_inventory"
+    id = db.Column(db.Integer, primary_key=True)
+    printProduct = db.Column(db.Integer, db.ForeignKey('print_product.id'), nullable=False)
+    paperSize = db.Column(db.Integer, db.ForeignKey('paper_size.id'), nullable=False)
+    paperType = db.Column(db.Integer, db.ForeignKey('paper_type.id'), nullable=False)
+    quantity = db.Column(db.Integer, nullable=True)
+
 
 from . import dataseed
 
