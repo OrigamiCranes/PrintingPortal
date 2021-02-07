@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<head>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/sidebar.css') }}">
+</head>
+
+<div class="sidenav">
+  <a href="{{url_for('printing.index')}}">Print Order</a>
+  <a href="{{url_for('printing.orderHistory')}}">Print Order History</a>
+  <a href="{{url_for('printing.inventoryPrints')}}">Print Inventory</a>
+</div>
+
+<div class="main">
+  {% block main %} {% endblock %}
+</div>
+
+{% endblock %}

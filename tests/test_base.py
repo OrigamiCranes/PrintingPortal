@@ -10,7 +10,7 @@ basedir = os.path.abspath(os.path.dirname(__file__))
 
 class TestBase(TestCase):
     def create_app(self):
-        app.config['SQLALCHEMY_DATABASE_URI'] = "sqlite:///" + os.path.join(basedir, 'test.db')
+        #app.config['SQLALCHEMY_DATABASE_URI'] = "sqlite:///" + os.path.join(basedir, 'test.db')
 
         app.config['TESTING'] = True
         app.config['LOGIN_DISABLED'] = True
@@ -37,10 +37,11 @@ class TestBase(TestCase):
 
     def tearDown(self):
         path = os.path.dirname(os.path.dirname(__file__)) + "\migrations"
-        db.drop_all()
-        db.session.remove()
+        db.session.close()
+        #db.drop_all()
+        #db.session.remove()
 
-        os.remove(os.path.join(basedir, 'test.db'))
+        #os.remove(os.path.join(basedir, 'test.db'))
 
 
     def add_data(self):
