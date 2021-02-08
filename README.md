@@ -21,6 +21,7 @@
     </li>
     <li><a href="#roadmap">Roadmap / Kanban Board</a></li>
     <li><a href="#roadmap">Database Design</a></li>
+    <li><a href="#roadmap">Test Coverage</a></li>
     <li><a href="#license">License</a></li>
     <li><a href="#contact">Contact</a></li>
     <li><a href="#acknowledgements">Acknowledgements</a></li>
