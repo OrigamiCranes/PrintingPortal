@@ -142,6 +142,7 @@ def edit(row_id):
 @login_required
 def clear():
     db.session.query(models.PrintOrder).delete()
+    db.session.execute("ALTER TABLE print_order AUTO_INCREMENT = 1")
     db.session.commit()
     return redirect(url_for('.index'))
 
@@ -163,6 +164,8 @@ def checkout():
             printProduct=order.printProduct,
             quantity=order.quantity)
         db.session.add(printHistory_row)
+
+    db.session.execute("ALTER TABLE print_order AUTO_INCREMENT = 1")
     db.session.query(models.PrintOrder).delete()
     db.session.commit()
 

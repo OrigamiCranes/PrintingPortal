@@ -2,6 +2,7 @@ import unittest
 from flask_testing import TestCase
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import upgrade, downgrade
+from config import Test
 
 from app import *
 import os
@@ -12,14 +13,12 @@ class TestBase(TestCase):
     def create_app(self):
         #app.config['SQLALCHEMY_DATABASE_URI'] = "sqlite:///" + os.path.join(basedir, 'test.db')
 
-        app.config['TESTING'] = True
-        app.config['LOGIN_DISABLED'] = True
-        app.config['WTF_CSRF_ENABLED'] = False
+        app.config.from_object(Test)
 
         return app
 
     def setUp(self):
-        path = os.path.dirname(os.path.dirname(__file__)) + "\migrations"
+        path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "migrations")
         upgrade(directory=os.path.abspath(path))
         db.create_all()
 
@@ -36,7 +35,6 @@ class TestBase(TestCase):
         # data
 
     def tearDown(self):
-        path = os.path.dirname(os.path.dirname(__file__)) + "\migrations"
         db.session.close()
         #db.drop_all()
         #db.session.remove()
