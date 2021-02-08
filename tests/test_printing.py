@@ -69,42 +69,42 @@ class TestRoutes(TestBase):
        response = self.client.post(url_for('printing.checkout'), follow_redirects=True)
        self.assertIn(b'Print Order', response.data)
 
-    def test_post_edit(self):
-        self.client.post(url_for('printing.add', paperSize=1, paperType=1,
-                                 printProduct=1, quantity=1),
-                         follow_redirects=True)
-
-        response = self.client.post(url_for('printing.edit', row_id=1,  paperSize=1, paperType=1,
-                                            printProduct=1, quantity=1),
-                                    follow_redirects=True)
-        self.assertIn(b'Print Order', response.data)
-
-        response = self.client.post(url_for('printing.edit', row_id=1, paperSize=11111, paperType=1,
-                                            printProduct=1, quantity=1),
-                                    follow_redirects=True)
-        self.assertIn('printOrder', response.location)
-        self.assertEqual(response.status_code, 304)
-
-        response = self.client.post(url_for('printing.clear'), follow_redirects=True)
-        self.assertIn(b'Print Order', response.data)
+    #def test_post_edit(self):
+    #    self.client.post(url_for('printing.add', paperSize=1, paperType=1,
+    #                             printProduct=1, quantity=1),
+    #                     follow_redirects=True)
+#
+    #    response = self.client.post(url_for('printing.edit', row_id=1,  paperSize=1, paperType=1,
+    #                                        printProduct=1, quantity=1),
+    #                                follow_redirects=True)
+    #    self.assertIn(b'Print Order', response.data)
+#
+    #    response = self.client.post(url_for('printing.edit', row_id=1, paperSize=11111, paperType=1,
+    #                                        printProduct=1, quantity=1),
+    #                                follow_redirects=True)
+    #    self.assertIn('printOrder', response.location)
+    #    self.assertEqual(response.status_code, 304)
+#
+    #    response = self.client.post(url_for('printing.clear'), follow_redirects=True)
+    #    self.assertIn(b'Print Order', response.data)
 
 class TestForms(TestBase):
     def test_form_add(self):
         formAdd = formPrinterQuery_factory('Add')
         self.assertIs(formAdd.form_type, 'Add')
 
-    def test_form_edit(self):
-        response = self.client.post(url_for('printing.add', paperSize=1, paperType=1,
-                                            printProduct=1, quantity=1),
-                                    follow_redirects=True)
-        self.assertIn(b'Print Order', response.data)
-
-
-        formEdit = formPrinterQuery_factory('Edit', row_id=1)
-        self.assertIs(formEdit.form_type, 'Edit')
-
-        response = self.client.post(url_for('printing.clear'), follow_redirects=True)
-        self.assertIn(b'Print Order', response.data)
+    #def test_form_edit(self):
+    #    response = self.client.post(url_for('printing.add', paperSize=1, paperType=1,
+    #                                        printProduct=1, quantity=1),
+    #                                follow_redirects=True)
+    #    self.assertIn(b'Print Order', response.data)
+#
+#
+    #    formEdit = formPrinterQuery_factory('Edit', row_id=1)
+    #    self.assertIs(formEdit.form_type, 'Edit')
+#
+    #    response = self.client.post(url_for('printing.clear'), follow_redirects=True)
+    #    self.assertIn(b'Print Order', response.data)
 
     def test_form_filter(self):
         formFilter = formPrinterQuery_factory('Filter')
